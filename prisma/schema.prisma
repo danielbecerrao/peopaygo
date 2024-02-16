@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @default(uuid()) @id
+  email         String        @unique
+  password      String
+  salt          String
+  name          String  
+  role          Role          @default(CLIENT)
+  client        Client?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now())
+  deletedAt     DateTime?
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+model Employee {
+  id                String              @default(uuid()) @id
+  name              String
+  document          String              @unique
+  paymentType       PaymentType         @relation(fields: [paymentTypeId], references: [id])
+  paymentTypeId     String
+  client            Client              @relation(fields: [clientId], references: [id])
+  clientId          String
+  TimesheetDetails  TimesheetDetail[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now())
+  deletedAt         DateTime?
+}
+
+model PaymentType {
+  id          String      @default(uuid()) @id
+  name        String
+  amount      Float
+  employee    Employee[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now())
+  deletedAt   DateTime?
+}
+
+model Client {
+  id          String        @default(uuid()) @id
+  name        String
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String        @unique
+  employee    Employee[]
+  timesheet   Timesheet[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now())
+  deletedAt   DateTime?
+}
+
+model Timesheet {
+  id                String              @default(uuid()) @id
+  client            Client              @relation(fields: [clientId], references: [id])
+  clientId          String
+  submissionDate    DateTime
+  chequeDate        DateTime
+  status            Status              @default(PENDIENTE)
+  timesheetDetails  TimesheetDetail[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now())
+  deletedAt         DateTime?
+}
+
+enum Status {
+  PENDIENTE
+  PAGO
+}
+
+model TimesheetDetail {
+  id            String      @default(uuid()) @id
+  timesheet     Timesheet   @relation(fields: [timesheetId], references: [id])
+  timesheetId   String
+  employee      Employee    @relation(fields: [employeeId], references: [id])
+  employeeId    String
+  hourlyRate    Float
+  hoursWorked   Int
+  grossSalary   Float
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  deletedAt     DateTime?
+}
